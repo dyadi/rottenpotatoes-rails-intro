@@ -7,15 +7,26 @@ class MoviesController < ApplicationController
   end
 
   def index
-    ratings_list = (params.key?(:ratings)) ? params[:ratings].keys : []
+    if !params.key?(:clicked)
+      if session[:ratings] || session[:clicked]
+        redirect_to movies_path({ratings: session[:ratings], clicked: session[:clicked]}) and return
+      else
+        ratings_list = Movie.all_ratings
+      end
+    else
+      ratings_list = (params[:ratings]) ? params[:ratings].keys : []
+    end
+    
     @movies = Movie.with_ratings(ratings_list)
-    if params.key?(:clicked)
+    if params[:clicked]
       @movies = @movies.order(params[:clicked])
     end
     @all_ratings = Movie.all_ratings
     @ratings_to_show = ratings_list
     @title_header = (params[:clicked] == 'title') ? 'hilite bg-warning' : ''
     @release_date_header = (params[:clicked] == 'release_date') ? 'hilite bg-warning' : ''
+    session[:ratings] = params[:ratings]
+    session[:clicked] = params[:clicked]
   end
 
   def new
